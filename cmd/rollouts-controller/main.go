@@ -106,6 +106,8 @@ func newCommand() *cobra.Command {
 				namespace = configNS
 				log.Infof("Using namespace %s", namespace)
 			}
+			k8sRequestProvider := &metrics.K8sRequestsCountProvider{}
+			kubeclientmetrics.AddMetricsTransportWrapper(config, k8sRequestProvider.IncKubernetesRequest)
 
 			kubeClient, err := kubernetes.NewForConfig(config)
 			checkError(err)
@@ -154,8 +156,7 @@ func newCommand() *cobra.Command {
 			configMapInformer := controllerNamespaceInformerFactory.Core().V1().ConfigMaps()
 			secretInformer := controllerNamespaceInformerFactory.Core().V1().Secrets()
 
-			k8sRequestProvider := &metrics.K8sRequestsCountProvider{}
-			kubeclientmetrics.AddMetricsTransportWrapper(config, k8sRequestProvider.IncKubernetesRequest)
+
 			mode, err := ingressutil.DetermineIngressMode(ingressVersion, kubeClient.DiscoveryClient)
 			checkError(err)
 			ingressWrapper, err := ingressutil.NewIngressWrapper(mode, kubeClient, kubeInformerFactory)
